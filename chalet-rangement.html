@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏔️ Rangement du Chalet</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --wood:#7A5C1E; --wood-light:#C9A84C; --wood-pale:#E8D5A3;
+  --cream:#FFFBF2; --cream-mid:#F7EDDA; --cream-dark:#EDE0C8;
+  --slate:#1A1A2E; --slate-mid:#4A4A5A; --slate-light:#8A8A9A;
+  --green:#2ECC71; --green-dark:#1B8C4A; --green-pale:#D5F5E3;
+  --amber:#E67E22; --amber-pale:#FDEBD0;
+  --red:#E74C3C; --red-pale:#FDEDEC;
+  --blue:#3498DB; --blue-pale:#D6EAF8;
+  --radius:14px; --radius-sm:8px;
+  --shadow:0 2px 12px rgba(0,0,0,.07);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.10);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--slate);min-height:100vh}
+
+/* ═══ HEADER ═══ */
+.hero{
+  background:linear-gradient(160deg,#3D2B0F 0%,#6B4F1D 40%,#8B6914 100%);
+  padding:28px 24px 80px;position:relative;overflow:hidden;
+}
+.hero::after{
+  content:'';position:absolute;bottom:-2px;left:0;right:0;height:40px;
+  background:var(--cream);border-radius:40px 40px 0 0;
+}
+.hero-inner{max-width:800px;margin:0 auto;position:relative;z-index:1}
+.hero h1{
+  font-family:'Fraunces',serif;font-size:clamp(1.8rem,5vw,2.6rem);
+  color:#FFF;line-height:1.15;margin-bottom:6px;
+}
+.hero h1 span{color:var(--wood-light)}
+.hero p{color:rgba(255,255,255,.7);font-size:.95rem}
+.mountain-deco{
+  position:absolute;top:12px;right:20px;font-size:3.2rem;opacity:.18;
+  filter:grayscale(1);pointer-events:none;
+}
+
+/* ═══ TIMER BAR ═══ */
+.timer-bar{
+  max-width:800px;margin:-50px auto 0;padding:0 16px;position:relative;z-index:3;
+}
+.timer-card{
+  background:#FFF;border-radius:var(--radius);padding:14px 20px;
+  box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:14px;
+  flex-wrap:wrap;
+}
+.timer-display{
+  font-family:'Fraunces',serif;font-size:1.6rem;font-weight:700;
+  color:var(--slate);letter-spacing:1px;min-width:120px;
+  font-variant-numeric:tabular-nums;
+}
+.timer-display.running{color:var(--amber)}
+.timer-display.stopped{color:var(--green-dark)}
+.timer-label{font-size:.78rem;color:var(--slate-light);flex:1;min-width:100px;line-height:1.3}
+.timer-label strong{color:var(--slate);display:block;font-size:.85rem}
+.timer-btns{display:flex;gap:6px}
+.timer-btn{
+  padding:7px 16px;border-radius:8px;border:none;cursor:pointer;
+  font-family:'DM Sans',sans-serif;font-weight:600;font-size:.78rem;
+  transition:all .2s;
+}
+.timer-btn:hover{transform:scale(1.04)}
+.btn-start{background:var(--green);color:#FFF}
+.btn-pause{background:var(--amber);color:#FFF}
+.btn-reset-timer{background:var(--cream-dark);color:var(--slate-mid)}
+
+/* ═══ GLOBAL PROGRESS ═══ */
+.global-wrap{
+  max-width:800px;margin:14px auto 0;padding:0 16px;position:relative;z-index:2;
+}
+.global-card{
+  background:#FFF;border-radius:var(--radius);padding:20px 24px;
+  box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:20px;
+  flex-wrap:wrap;
+}
+.global-ring{position:relative;width:80px;height:80px;flex-shrink:0}
+.global-ring svg{transform:rotate(-90deg)}
+.global-ring circle{fill:none;stroke-width:7;stroke-linecap:round}
+.global-ring .track{stroke:var(--cream-mid)}
+.global-ring .fill{stroke:var(--green);transition:stroke-dashoffset .6s ease}
+.global-ring .pct{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:'Fraunces',serif;font-size:1.3rem;font-weight:700;color:var(--slate);
+}
+.global-info{flex:1;min-width:160px}
+.global-info h3{font-size:1rem;font-weight:600;margin-bottom:2px}
+.global-info .counts{font-size:.85rem;color:var(--slate-light)}
+.global-info .counts b{color:var(--green-dark)}
+.global-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.badge{
+  font-size:.7rem;font-weight:600;padding:3px 10px;border-radius:20px;
+  white-space:nowrap;
+}
+.badge.done{background:var(--green-pale);color:var(--green-dark)}
+.badge.prog{background:var(--amber-pale);color:var(--amber)}
+.badge.todo{background:var(--cream-mid);color:var(--slate-light)}
+
+/* ═══ VISUAL MAP ═══ */
+.map-section{max-width:800px;margin:28px auto 0;padding:0 16px}
+.map-section h2{
+  font-family:'Fraunces',serif;font-size:1.15rem;margin-bottom:14px;
+  color:var(--slate-mid);
+}
+.map-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(130px,1fr));
+  gap:10px;
+}
+.map-tile{
+  background:#FFF;border-radius:var(--radius-sm);padding:14px 10px;
+  text-align:center;cursor:pointer;border:2px solid transparent;
+  transition:all .25s ease;box-shadow:var(--shadow);position:relative;
+  overflow:hidden;
+}
+.map-tile:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+.map-tile.active{border-color:var(--wood-light);background:var(--cream)}
+.map-tile.completed{border-color:var(--green);background:var(--green-pale)}
+.map-tile .icon{font-size:1.8rem;margin-bottom:6px;display:block}
+.map-tile .name{font-size:.75rem;font-weight:600;line-height:1.2;color:var(--slate)}
+.map-tile .mini-bar{
+  height:4px;border-radius:4px;background:var(--cream-dark);
+  margin-top:8px;overflow:hidden;
+}
+.map-tile .mini-fill{height:100%;border-radius:4px;transition:width .5s ease}
+.map-tile .mini-pct{font-size:.65rem;font-weight:700;margin-top:4px}
+.map-tile .done-check{
+  position:absolute;top:6px;right:6px;width:20px;height:20px;
+  border-radius:50%;background:var(--green);color:#FFF;
+  display:none;align-items:center;justify-content:center;font-size:.65rem;
+}
+.map-tile.completed .done-check{display:flex}
+.c-green{color:var(--green-dark)} .c-amber{color:var(--amber)} .c-slate{color:var(--slate-light)}
+
+/* ═══ TASK SECTIONS ═══ */
+.sections{max-width:800px;margin:28px auto 40px;padding:0 16px}
+.section{
+  background:#FFF;border-radius:var(--radius);margin-bottom:14px;
+  box-shadow:var(--shadow);overflow:hidden;
+  transition:box-shadow .3s ease;scroll-margin-top:16px;
+}
+.section.highlight{box-shadow:0 0 0 2px var(--wood-light),var(--shadow-lg)}
+.section-head{
+  display:flex;align-items:center;gap:12px;padding:16px 20px;
+  cursor:pointer;user-select:none;transition:background .2s;
+}
+.section-head:hover{background:var(--cream)}
+.section-head .s-icon{font-size:1.5rem;flex-shrink:0}
+.section-head .s-title{flex:1;font-weight:700;font-size:.95rem}
+.section-head .s-prog{
+  display:flex;align-items:center;gap:8px;font-size:.8rem;font-weight:600;
+}
+.s-prog-bar{width:60px;height:6px;background:var(--cream-dark);border-radius:6px;overflow:hidden}
+.s-prog-fill{height:100%;border-radius:6px;transition:width .4s ease}
+.s-arrow{
+  width:24px;height:24px;display:flex;align-items:center;justify-content:center;
+  transition:transform .3s ease;color:var(--slate-light);font-size:.8rem;
+}
+.section.open .s-arrow{transform:rotate(180deg)}
+.section-body{max-height:0;overflow:hidden;transition:max-height .4s ease}
+.section.open .section-body{max-height:2000px}
+.task-list{padding:0 20px 16px}
+.task-note{
+  font-size:.8rem;color:var(--slate-light);font-style:italic;
+  padding:4px 0 10px 36px;line-height:1.4;
+}
+.task{
+  display:flex;align-items:flex-start;gap:10px;padding:9px 0;
+  border-bottom:1px solid var(--cream-mid);
+}
+.task:last-child{border-bottom:none}
+.task label{
+  display:flex;align-items:flex-start;gap:10px;cursor:pointer;
+  flex:1;line-height:1.45;font-size:.88rem;
+}
+.task input[type="checkbox"]{display:none}
+.cbox{
+  width:22px;height:22px;border-radius:6px;border:2px solid var(--cream-dark);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  transition:all .25s ease;margin-top:1px;background:#FFF;
+}
+.cbox svg{opacity:0;transform:scale(.5);transition:all .2s ease}
+.task input:checked ~ .cbox{background:var(--green);border-color:var(--green)}
+.task input:checked ~ .cbox svg{opacity:1;transform:scale(1)}
+.task input:checked ~ .txt{
+  color:var(--slate-light);text-decoration:line-through;
+  text-decoration-color:rgba(0,0,0,.15);
+}
+.txt{transition:all .3s ease}
+
+/* ═══ FLOATING BUTTONS ═══ */
+.fab-wrap{position:fixed;bottom:20px;right:20px;display:flex;gap:8px;z-index:10}
+.fab{
+  width:48px;height:48px;border-radius:50%;border:none;cursor:pointer;
+  font-size:1.2rem;display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--shadow-lg);transition:transform .2s;
+}
+.fab:hover{transform:scale(1.1)}
+.fab.reset{background:var(--red);color:#FFF}
+.fab.expand{background:var(--wood);color:#FFF}
+
+/* ═══ CONFETTI ═══ */
+.confetti-wrap{position:fixed;inset:0;pointer-events:none;z-index:100}
+.confetti-piece{
+  position:absolute;width:10px;height:10px;opacity:0;
+  animation:confettiFall 2.5s ease-out forwards;
+}
+@keyframes confettiFall{
+  0%{opacity:1;transform:translateY(-20px) rotate(0deg) scale(1)}
+  100%{opacity:0;transform:translateY(100vh) rotate(720deg) scale(.3)}
+}
+
+/* ═══ RESPONSIVE ═══ */
+@media(max-width:500px){
+  .global-card{flex-direction:column;text-align:center;gap:12px}
+  .timer-card{flex-direction:column;text-align:center;gap:10px}
+  .map-grid{grid-template-columns:repeat(3,1fr)}
+  .section-head .s-prog{display:none}
+}
+
+/* ═══ ANIMATIONS ═══ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.section{animation:fadeUp .4s ease both}
+.section:nth-child(2){animation-delay:.05s}
+.section:nth-child(3){animation-delay:.1s}
+.section:nth-child(4){animation-delay:.15s}
+.section:nth-child(5){animation-delay:.2s}
+.section:nth-child(6){animation-delay:.25s}
+.section:nth-child(7){animation-delay:.3s}
+.section:nth-child(8){animation-delay:.35s}
+.section:nth-child(9){animation-delay:.4s}
+.section:nth-child(10){animation-delay:.45s}
+
+.done-banner{
+  display:none;text-align:center;padding:24px;
+  font-family:'Fraunces',serif;font-size:1.3rem;color:var(--green-dark);
+}
+.done-banner.show{display:block;animation:fadeUp .5s ease}
+.done-banner .final-time{
+  font-size:1.8rem;display:block;margin-top:6px;
+  color:var(--wood);font-weight:700;
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <span class="mountain-deco">🏔️🌲🏠</span>
+  <div class="hero-inner">
+    <h1>Rangement <span>du Chalet</span></h1>
+    <p>Checklist interactive · Suivi par espace</p>
+  </div>
+</div>
+
+<!-- TIMER -->
+<div class="timer-bar">
+  <div class="timer-card">
+    <div class="timer-display" id="timerDisplay">00:00:00</div>
+    <div class="timer-label">
+      <strong id="timerStatus">⏱️ Prêt</strong>
+      <span id="timerHint">Démarre le chrono ou coche ta première tâche !</span>
+    </div>
+    <div class="timer-btns">
+      <button class="timer-btn btn-start" id="btnStart" onclick="timerStart()">▶ Démarrer</button>
+      <button class="timer-btn btn-pause" id="btnPause" onclick="timerPause()" style="display:none">⏸ Pause</button>
+      <button class="timer-btn btn-reset-timer" id="btnTimerReset" onclick="timerReset()">↺</button>
+    </div>
+  </div>
+</div>
+
+<!-- GLOBAL PROGRESS -->
+<div class="global-wrap">
+  <div class="global-card">
+    <div class="global-ring">
+      <svg viewBox="0 0 80 80" width="80" height="80">
+        <circle class="track" cx="40" cy="40" r="34"/>
+        <circle class="fill" cx="40" cy="40" r="34"
+          stroke-dasharray="213.6" stroke-dashoffset="213.6"/>
+      </svg>
+      <div class="pct">0%</div>
+    </div>
+    <div class="global-info">
+      <h3>Progression globale</h3>
+      <div class="counts"><b id="gDone">0</b> / <span id="gTotal">0</span> tâches terminées</div>
+      <div class="global-badges" id="gBadges"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAP -->
+<div class="map-section">
+  <h2>📍 Vue par espace — cliquez pour naviguer</h2>
+  <div class="map-grid" id="mapGrid"></div>
+</div>
+
+<!-- TASK SECTIONS -->
+<div class="sections" id="sections"></div>
+
+<div class="done-banner" id="doneBanner">
+  🎉 Bravo ! Le chalet est prêt pour les guests !
+  <span class="final-time" id="finalTime"></span>
+</div>
+
+<div class="fab-wrap">
+  <button class="fab expand" onclick="toggleAllSections()" title="Ouvrir/Fermer tout">≡</button>
+  <button class="fab reset" onclick="resetAll()" title="Tout réinitialiser">↺</button>
+</div>
+
+<div class="confetti-wrap" id="confetti"></div>
+
+<script>
+const DATA = [
+  { id:'ext', icon:'🌿', name:'Extérieur', tasks:[
+      'Récupérer la clé dans la boîte à clé',
+      'Faire un check visuel du jardin',
+      'Ouvrir la buanderie',
+      'Vérifier et ranger le barbecue',
+      'Ranger et nettoyer les chaises longues',
+      'Ranger les parasols',
+      'Vérifier la propreté des coussins des chaises longues',
+      'Vérifier la surface de la table extérieure et des bancs',
+      'Vérifier la pelouse et le contrebas du jardin',
+  ]},
+  { id:'entree', icon:'🚪', name:'Arrivée', note:'Ouvrir les fenêtres, check visuel général (odeurs, objets oubliés). Chercher la clé des cadenas et porte chambre du bas. Préparer produits de nettoyage.', tasks:[
+      'Ouvrir les fenêtres et check visuel/olfactif général',
+      'Chercher la clé des cadenas et porte chambre du bas',
+      'Préparer les produits de nettoyage, gants, chiffon, seau',
+  ]},
+  { id:'lessive', icon:'🧺', name:'Lessive', note:'La lessive « rapide » prend environ 1h30.', tasks:[
+      'Enlever les draps',
+      'Récupérer les torchons de cuisine',
+      'Récupérer les serviettes de bain et tapis de sol',
+      'Lancer une lessive de « blanc »',
+      'Lancer une lessive de « noir »',
+  ]},
+  { id:'veranda', icon:'🪟', name:'Véranda', tasks:[
+      'Checker la véranda',
+      'Passer un coup de chiffon sur tables, bancs et rambarde',
+      'Mettre les coussins extérieurs à l\'intérieur',
+      'Vérifier la propreté de la vitre',
+  ]},
+  { id:'salon', icon:'🛋️', name:'Salon', tasks:[
+      'Secouer les coussins du canapé à l\'extérieur et les remettre',
+      'Passer un coup de chiffon sur la table',
+      'Trouver et nettoyer les 2 télécommandes (bougies + TV)',
+      'Vérifier bougies, recharger batteries si besoin (chargeurs dans le réduit en bas)',
+      'Enlever les cendres du pierre ollaire (pelle + poussoir, PAS l\'aspirateur) → compost cabane jardin',
+      'Vérifier stock de bois, petit bois et allume-feu',
+      'Nettoyer la vitre du pierre ollaire (produit à four sous l\'évier cuisine)',
+  ]},
+  { id:'sam', icon:'🍽️', name:'Salle à manger', tasks:[
+      'Passer un coup de chiffon sur la table',
+      'Secouer les peaux de mouton',
+      'Mettre les chaises sur la table',
+      'Vérifier propreté du four à raclette et caquelon à fondue',
+      'Remettre en charge le haut-parleur JBL (prise vaisselier)',
+  ]},
+  { id:'cuisine', icon:'👨‍🍳', name:'Cuisine', tasks:[
+      'Nettoyer le plan de travail',
+      'Lancer une machine à laver la vaisselle (~1h)',
+      'Nettoyer et checker les armoires',
+      'Vérifier verres, assiettes, couverts, casseroles (propreté + rangement)',
+      'Vider et nettoyer la machine à café, vider le réservoir d\'eau',
+      'Vider la caisse de tri (bouteilles, carton, alu), la nettoyer si besoin',
+      'Vider et nettoyer le frigo, le mettre sur « minimum »',
+      'Vérifier le four et la propreté de la vitre',
+      'Vider les miettes du toasteur si besoin',
+      'Remettre une bouteille pour les guests suivants',
+  ]},
+  { id:'sdb', icon:'🚿', name:'Salle de bain', note:'Nettoyer du plus propre (lavabo) au plus sale (WC).', tasks:[
+      'Nettoyer lavabo → douche → WC',
+      'Vérifier : aucun poil/cheveu, taches de calcaire',
+      'Vider et remplacer le sac de la poubelle',
+      'Nouveau rouleau de PQ + vérifier stock dans le meuble',
+      'Nettoyer verres à brosse à dent et coupelles',
+      'Remettre du savon dans la douche + bouteille vers le lavabo',
+  ]},
+  { id:'sols', icon:'🧹', name:'Nettoyage sols', note:'À ce stade le chalet est prêt pour les sols. L\'aspirateur jaune est plus puissant.', tasks:[
+      'Passer l\'aspirateur partout (vérifier/changer le sac si plein)',
+      'Passer la serpillère sur sols en dur (pas le bois ou avec précaution)',
+      'Faire la poussière sur les meubles',
+      'Checker les toiles d\'araignée sur les murs',
+      'Vérifier la propreté des vitres',
+  ]},
+  { id:'final', icon:'✨', name:'Remise en location', tasks:[
+      'Remettre les draps de lits',
+      'Remettre les serviettes de bain',
+      'Placer en rouleaux les deux tapis de bain dans la douche',
+      'Vaporiser un peu de parfum dans chaque pièce',
+      'Préparer le panier de bienvenue avec des flûtes à champagne',
+      'Remettre la clé dans la boîte si besoin',
+  ]},
+];
+
+// ═══ STATE ═══
+const state = {};
+DATA.forEach(s => { state[s.id] = new Array(s.tasks.length).fill(false); });
+
+// ═══ TIMER ═══
+let timerInterval = null, timerElapsed = 0, timerRunning = false, timerFinished = false;
+
+function fmtTime(sec){
+  const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60), s=sec%60;
+  return [h,m,s].map(v=>String(v).padStart(2,'0')).join(':');
+}
+function timerTick(){
+  timerElapsed++;
+  document.getElementById('timerDisplay').textContent = fmtTime(timerElapsed);
+}
+function timerStart(){
+  if(timerFinished) return;
+  timerRunning = true;
+  timerInterval = setInterval(timerTick, 1000);
+  document.getElementById('btnStart').style.display = 'none';
+  document.getElementById('btnPause').style.display = '';
+  document.getElementById('timerDisplay').className = 'timer-display running';
+  document.getElementById('timerStatus').textContent = '⏱️ En cours…';
+  document.getElementById('timerHint').textContent = 'Le chrono tourne, c\'est parti !';
+}
+function timerPause(){
+  timerRunning = false;
+  clearInterval(timerInterval);
+  document.getElementById('btnStart').style.display = '';
+  document.getElementById('btnStart').textContent = '▶ Reprendre';
+  document.getElementById('btnPause').style.display = 'none';
+  document.getElementById('timerDisplay').className = 'timer-display';
+  document.getElementById('timerStatus').textContent = '⏸ En pause';
+  document.getElementById('timerHint').textContent = fmtTime(timerElapsed) + ' écoulé';
+}
+function timerStop(){
+  timerRunning = false; timerFinished = true;
+  clearInterval(timerInterval);
+  document.getElementById('btnStart').style.display = 'none';
+  document.getElementById('btnPause').style.display = 'none';
+  document.getElementById('timerDisplay').className = 'timer-display stopped';
+  document.getElementById('timerStatus').textContent = '✅ Terminé !';
+  document.getElementById('timerHint').textContent = 'Temps total : ' + fmtTime(timerElapsed);
+  document.getElementById('finalTime').textContent = '⏱️ ' + fmtTime(timerElapsed);
+}
+function timerReset(){
+  if((timerRunning || timerElapsed > 0) && !confirm('Réinitialiser le chronomètre ?')) return;
+  clearInterval(timerInterval);
+  timerElapsed=0; timerRunning=false; timerFinished=false;
+  document.getElementById('timerDisplay').textContent = '00:00:00';
+  document.getElementById('timerDisplay').className = 'timer-display';
+  document.getElementById('btnStart').style.display = '';
+  document.getElementById('btnStart').textContent = '▶ Démarrer';
+  document.getElementById('btnPause').style.display = 'none';
+  document.getElementById('timerStatus').textContent = '⏱️ Prêt';
+  document.getElementById('timerHint').textContent = 'Démarre le chrono ou coche ta première tâche !';
+}
+
+// ═══ BUILD UI ═══
+function buildUI(){
+  const grid = document.getElementById('mapGrid');
+  grid.innerHTML = DATA.map(s => `
+    <div class="map-tile" data-id="${s.id}" onclick="navigateTo('${s.id}')">
+      <span class="done-check">✓</span>
+      <span class="icon">${s.icon}</span>
+      <span class="name">${s.name}</span>
+      <div class="mini-bar"><div class="mini-fill" id="mf_${s.id}"></div></div>
+      <div class="mini-pct" id="mp_${s.id}">0%</div>
+    </div>
+  `).join('');
+
+  const wrap = document.getElementById('sections');
+  wrap.innerHTML = DATA.map(s => {
+    const tasksHtml = s.tasks.map((t,i) => `
+      <div class="task"><label>
+        <input type="checkbox" data-sec="${s.id}" data-idx="${i}"
+          onchange="toggle('${s.id}',${i},this.checked)" ${state[s.id][i]?'checked':''}>
+        <span class="cbox"><svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2.5 7.5L5.5 10.5L11.5 3.5" stroke="#FFF" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span class="txt">${t}</span>
+      </label></div>
+    `).join('');
+    const noteHtml = s.note ? `<div class="task-note">💡 ${s.note}</div>` : '';
+    return `
+      <div class="section" id="sec_${s.id}">
+        <div class="section-head" onclick="toggleSection('${s.id}')">
+          <span class="s-icon">${s.icon}</span>
+          <span class="s-title">${s.name}</span>
+          <span class="s-prog">
+            <span id="sp_${s.id}" class="c-slate">0/${s.tasks.length}</span>
+            <span class="s-prog-bar"><span class="s-prog-fill" id="sf_${s.id}"></span></span>
+          </span>
+          <span class="s-arrow">▼</span>
+        </div>
+        <div class="section-body"><div class="task-list">${noteHtml}${tasksHtml}</div></div>
+      </div>`;
+  }).join('');
+  updateAll();
+}
+
+// ═══ INTERACTIONS ═══
+function toggle(secId, idx, checked){
+  state[secId][idx] = checked;
+  if(checked && !timerRunning && !timerFinished && timerElapsed === 0) timerStart();
+  updateAll();
+}
+
+function toggleSection(id){
+  document.getElementById('sec_'+id).classList.toggle('open');
+}
+
+function navigateTo(id){
+  // Close all other sections
+  document.querySelectorAll('.section.open').forEach(s => s.classList.remove('open'));
+  // Highlight map tile
+  document.querySelectorAll('.map-tile').forEach(t=>t.classList.remove('active'));
+  document.querySelector(`.map-tile[data-id="${id}"]`).classList.add('active');
+  // Open target section
+  const sec = document.getElementById('sec_'+id);
+  sec.classList.add('open');
+  sec.classList.add('highlight');
+  setTimeout(()=> sec.scrollIntoView({behavior:'smooth', block:'start'}), 80);
+  setTimeout(()=> sec.classList.remove('highlight'), 1800);
+}
+
+function getColor(pct){
+  if(pct>=100) return 'var(--green)';
+  if(pct>0) return 'var(--amber)';
+  return 'var(--cream-dark)';
+}
+
+function updateAll(){
+  let totalDone=0, totalAll=0, doneRooms=0, progRooms=0, todoRooms=0;
+  DATA.forEach(s=>{
+    const done = state[s.id].filter(Boolean).length;
+    const all = s.tasks.length;
+    const pct = Math.round(done/all*100);
+    totalDone+=done; totalAll+=all;
+    if(pct>=100) doneRooms++; else if(pct>0) progRooms++; else todoRooms++;
+
+    const sp = document.getElementById('sp_'+s.id);
+    if(sp){ sp.textContent=`${done}/${all}`; sp.className=pct>=100?'c-green':pct>0?'c-amber':'c-slate'; }
+    const sf = document.getElementById('sf_'+s.id);
+    if(sf){ sf.style.width=pct+'%'; sf.style.background=getColor(pct); }
+    const tile = document.querySelector(`.map-tile[data-id="${s.id}"]`);
+    if(tile) tile.classList.toggle('completed', pct>=100);
+    const mf = document.getElementById('mf_'+s.id);
+    const mp = document.getElementById('mp_'+s.id);
+    if(mf){ mf.style.width=pct+'%'; mf.style.background=getColor(pct); }
+    if(mp){ mp.textContent=pct+'%'; mp.className='mini-pct '+(pct>=100?'c-green':pct>0?'c-amber':'c-slate'); }
+  });
+
+  const gPct = totalAll ? Math.round(totalDone/totalAll*100) : 0;
+  document.querySelector('.pct').textContent = gPct+'%';
+  document.getElementById('gDone').textContent = totalDone;
+  document.getElementById('gTotal').textContent = totalAll;
+  const circ = document.querySelector('.global-ring .fill');
+  circ.style.strokeDashoffset = 213.6 - (213.6 * gPct / 100);
+
+  document.getElementById('gBadges').innerHTML =
+    `<span class="badge done">✓ ${doneRooms} terminé${doneRooms>1?'s':''}</span>`+
+    `<span class="badge prog">⏳ ${progRooms} en cours</span>`+
+    `<span class="badge todo">○ ${todoRooms} à faire</span>`;
+
+  const banner = document.getElementById('doneBanner');
+  if(gPct>=100){
+    if(!timerFinished) timerStop();
+    banner.classList.add('show');
+    launchConfetti();
+  } else { banner.classList.remove('show'); }
+}
+
+function resetAll(){
+  if(!confirm('Réinitialiser toutes les tâches et le chrono ?')) return;
+  DATA.forEach(s=>state[s.id].fill(false));
+  document.querySelectorAll('input[type="checkbox"]').forEach(cb=>cb.checked=false);
+  timerReset();
+  updateAll();
+}
+
+let allOpen = false;
+function toggleAllSections(){
+  allOpen = !allOpen;
+  document.querySelectorAll('.section').forEach(s=>{
+    allOpen ? s.classList.add('open') : s.classList.remove('open');
+  });
+}
+
+function launchConfetti(){
+  const wrap = document.getElementById('confetti');
+  if(wrap.children.length > 0) return;
+  const colors = ['#2ECC71','#E67E22','#3498DB','#E74C3C','#9B59B6','#F1C40F','#1ABC9C'];
+  for(let i=0;i<80;i++){
+    const p = document.createElement('div');
+    p.className='confetti-piece';
+    p.style.left = Math.random()*100+'%';
+    p.style.top = '-10px';
+    p.style.background = colors[Math.floor(Math.random()*colors.length)];
+    p.style.borderRadius = Math.random()>.5?'50%':'2px';
+    p.style.width = (6+Math.random()*8)+'px';
+    p.style.height = (6+Math.random()*8)+'px';
+    p.style.animationDelay = (Math.random()*1.5)+'s';
+    p.style.animationDuration = (2+Math.random()*1.5)+'s';
+    wrap.appendChild(p);
+  }
+  setTimeout(()=>{wrap.innerHTML=''},4500);
+}
+
+buildUI();
+</script>
+</body>
+</html>
